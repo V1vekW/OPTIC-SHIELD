@@ -1,11 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Shield, Camera, AlertTriangle, Activity, Wifi, WifiOff } from 'lucide-react'
-import DeviceCard from '@/components/DeviceCard'
-import DetectionList from '@/components/DetectionList'
-import StatsOverview from '@/components/StatsOverview'
+import { Shield, Camera, Activity, BarChart3, Settings, RefreshCw } from 'lucide-react'
 import { Device, Detection, DashboardStats } from '@/types'
+import { apiClient } from '@/lib/api-client'
+import { ConnectionStatus } from '@/components/ConnectionStatus'
+import { EnhancedStatsOverview } from '@/components/EnhancedStatsOverview'
+import { EnhancedDeviceCard } from '@/components/EnhancedDeviceCard'
+import { EnhancedDetectionList } from '@/components/EnhancedDetectionList'
+import { ActivityChart } from '@/components/ActivityChart'
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { Alert } from '@/components/ui/Alert'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
 
 export default function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([])
@@ -13,144 +21,213 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchDashboardData()
-    const interval = setInterval(fetchDashboardData, 30000)
+    const interval = setInterval(fetchDashboardData, 15000)
     return () => clearInterval(interval)
   }, [])
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshing(true)
+    
     try {
-      const [devicesRes, detectionsRes, statsRes] = await Promise.all([
-        fetch('/api/devices'),
-        fetch('/api/detections?limit=20'),
-        fetch('/api/stats')
+      const [devicesData, detectionsData, statsData] = await Promise.all([
+        apiClient.get<{ devices: Device[] }>('/api/devices'),
+        apiClient.get<{ detections: Detection[] }>('/api/detections?limit=50'),
+        apiClient.get<DashboardStats>('/api/stats')
       ])
 
-      if (devicesRes.ok) {
-        const devicesData = await devicesRes.json()
-        setDevices(devicesData.devices || [])
-      }
-
-      if (detectionsRes.ok) {
-        const detectionsData = await detectionsRes.json()
-        setDetections(detectionsData.detections || [])
-      }
-
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData)
-      }
-
+      setDevices(devicesData.devices || [])
+      setDetections(detectionsData.detections || [])
+      setStats(statsData)
       setError(null)
+      setLastUpdate(new Date())
     } catch (err) {
-      setError('Failed to fetch dashboard data')
       console.error('Dashboard fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const handleRefresh = () => {
+    fetchDashboardData(true)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-green-500 animate-pulse mx-auto mb-4" />
-          <p className="text-slate-400">Loading OPTIC-SHIELD Dashboard...</p>
+          <div className="relative mb-6">
+            <Shield className="w-20 h-20 text-green-500 mx-auto" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">OPTIC-SHIELD</h2>
+          <LoadingSpinner label="Initializing Dashboard..." size="sm" />
         </div>
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-slate-900 text-white">
-      {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-black text-white flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-900/80 backdrop-blur-xl border-r border-slate-700/50 shadow-lg flex flex-col">
+        <div className="p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-green-500" />
-            <div>
-              <h1 className="text-xl font-bold">OPTIC-SHIELD</h1>
-              <p className="text-sm text-slate-400">Wildlife Detection System</p>
+            <div className="relative">
+              <Shield className="w-8 h-8 text-green-500" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              {devices.some(d => d.status === 'online') ? (
-                <>
-                  <Wifi className="w-4 h-4 text-green-500" />
-                  <span className="text-green-500">
-                    {devices.filter(d => d.status === 'online').length} Online
-                  </span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-500">No devices online</span>
-                </>
-              )}
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+                OPTIC-SHIELD
+              </h1>
+              <p className="text-xs text-slate-400">Wildlife Detection</p>
             </div>
           </div>
         </div>
-      </header>
+        
+        <nav className="flex-1 p-4 space-y-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            icon={<BarChart3 className="w-4 h-4" />}
+          >
+            Dashboard
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            icon={<Camera className="w-4 h-4" />}
+          >
+            Devices
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            icon={<Activity className="w-4 h-4" />}
+          >
+            Detections
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            icon={<Settings className="w-4 h-4" />}
+          >
+            Settings
+          </Button>
+        </nav>
+        
+        <div className="p-4 border-t border-slate-700/50 space-y-2">
+          <ConnectionStatus />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            loading={refreshing}
+            icon={<RefreshCw className="w-4 h-4" />}
+            className="w-full"
+          >
+            Refresh
+          </Button>
+        </div>
+      </aside>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-[1600px] mx-auto px-6 py-8 space-y-8">
         {error && (
-          <div className="mb-6 bg-red-900/50 border border-red-700 rounded-lg p-4 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
-            <p className="text-red-200">{error}</p>
-          </div>
+          <Alert variant="error" title="Connection Error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
         )}
 
-        {/* Stats Overview */}
-        <StatsOverview stats={stats} />
+        <EnhancedStatsOverview stats={stats} />
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          {/* Devices Section */}
-          <div className="lg:col-span-1">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Camera className="w-5 h-5 text-blue-400" />
-                <h2 className="text-lg font-semibold">Devices</h2>
-                <span className="ml-auto text-sm text-slate-400">
-                  {devices.length} total
-                </span>
-              </div>
-              
-              {devices.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <Camera className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No devices registered</p>
-                  <p className="text-sm mt-1">Devices will appear here when connected</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {devices.map(device => (
-                    <DeviceCard key={device.id} device={device} />
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-1 space-y-6">
+            <Card gradient>
+              <CardHeader>
+                <CardTitle 
+                  icon={<Camera className="w-5 h-5" />}
+                  badge={
+                    <Badge variant="info" size="sm">
+                      {devices.length} total
+                    </Badge>
+                  }
+                >
+                  Connected Devices
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 max-h-[800px] overflow-y-auto custom-scrollbar">
+                {devices.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <Camera className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                    <p className="font-medium mb-1">No devices registered</p>
+                    <p className="text-sm">Devices will appear here when connected</p>
+                  </div>
+                ) : (
+                  devices.map(device => (
+                    <EnhancedDeviceCard key={device.id} device={device} />
+                  ))
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Detections Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5 text-orange-400" />
-                <h2 className="text-lg font-semibold">Recent Detections</h2>
-                <span className="ml-auto text-sm text-slate-400">
-                  Last 24 hours
-                </span>
-              </div>
-              
-              <DetectionList detections={detections} />
-            </div>
+          <div className="xl:col-span-2 space-y-6">
+            <Card gradient>
+              <CardHeader>
+                <CardTitle 
+                  icon={<BarChart3 className="w-5 h-5" />}
+                  badge={
+                    lastUpdate && (
+                      <span className="text-xs text-slate-500">
+                        Updated {lastUpdate.toLocaleTimeString()}
+                      </span>
+                    )
+                  }
+                >
+                  Activity Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ActivityChart stats={stats} />
+              </CardContent>
+            </Card>
+
+            <Card gradient>
+              <CardHeader>
+                <CardTitle 
+                  icon={<Activity className="w-5 h-5" />}
+                  badge={
+                    <Badge variant="success" size="sm">
+                      {detections.length} recent
+                    </Badge>
+                  }
+                >
+                  Recent Detections
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EnhancedDetectionList detections={detections} />
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   )
 }
