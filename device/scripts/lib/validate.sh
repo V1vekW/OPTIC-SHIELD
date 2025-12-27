@@ -3,11 +3,11 @@
 # Functions to validate the installation
 
 # Source platform detection
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/platform_detect.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/platform_detect.sh"
 
 # Validation results
-declare -A VALIDATION_RESULTS
+# declare -A VALIDATION_RESULTS  # Not supported in bash 3.x (macOS default)
 VALIDATION_PASS=0
 VALIDATION_FAIL=0
 VALIDATION_WARN=0
@@ -19,7 +19,7 @@ VALIDATION_WARN=0
 check_pass() {
     local name="$1"
     local message="$2"
-    VALIDATION_RESULTS["$name"]="PASS"
+    # VALIDATION_RESULTS["$name"]="PASS"
     ((VALIDATION_PASS++))
     echo -e "  ${GREEN}✓${NC} $name: $message"
 }
@@ -27,7 +27,7 @@ check_pass() {
 check_fail() {
     local name="$1"
     local message="$2"
-    VALIDATION_RESULTS["$name"]="FAIL"
+    # VALIDATION_RESULTS["$name"]="FAIL"
     ((VALIDATION_FAIL++))
     echo -e "  ${RED}✗${NC} $name: $message"
 }
@@ -35,7 +35,7 @@ check_fail() {
 check_warn() {
     local name="$1"
     local message="$2"
-    VALIDATION_RESULTS["$name"]="WARN"
+    # VALIDATION_RESULTS["$name"]="WARN"
     ((VALIDATION_WARN++))
     echo -e "  ${YELLOW}⚠${NC} $name: $message"
 }
@@ -43,7 +43,7 @@ check_warn() {
 check_skip() {
     local name="$1"
     local message="$2"
-    VALIDATION_RESULTS["$name"]="SKIP"
+    # VALIDATION_RESULTS["$name"]="SKIP"
     echo -e "  ${BLUE}○${NC} $name: $message (skipped)"
 }
 

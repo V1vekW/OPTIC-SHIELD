@@ -3,8 +3,8 @@
 # Platform-specific dependency installation
 
 # Source platform detection
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/platform_detect.sh"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LIB_DIR/platform_detect.sh"
 
 # ============================================================================
 # Package Managers
