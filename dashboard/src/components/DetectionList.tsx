@@ -8,18 +8,17 @@ interface DetectionListProps {
   detections: Detection[]
 }
 
-const animalEmojis: Record<string, string> = {
-  bird: '🐦',
-  cat: '🐱',
-  dog: '🐕',
-  horse: '🐴',
-  sheep: '🐑',
-  cow: '🐄',
-  elephant: '🐘',
-  bear: '🐻',
-  zebra: '🦓',
-  giraffe: '🦒',
-  default: '🦁'
+const wildCatEmojis: Record<string, string> = {
+  tiger: '🐯',
+  lion: '🦁',
+  leopard: '🐆',
+  jaguar: '🐆',
+  cheetah: '🐆',
+  'snow leopard': '🐆',
+  'clouded leopard': '🐆',
+  puma: '🐆',
+  lynx: '🐈',
+  default: '🐯'
 }
 
 export default function DetectionList({ detections }: DetectionListProps) {
@@ -41,7 +40,7 @@ export default function DetectionList({ detections }: DetectionListProps) {
           className="flex items-center gap-4 p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
         >
           <div className="text-3xl">
-            {animalEmojis[detection.className.toLowerCase()] || animalEmojis.default}
+            {wildCatEmojis[detection.className.toLowerCase()] || wildCatEmojis.default}
           </div>
           
           <div className="flex-1 min-w-0">

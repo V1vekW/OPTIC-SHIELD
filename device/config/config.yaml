@@ -23,10 +23,10 @@ detection:
     iou_threshold: 0.45
     max_detections: 10
   
-  # Target classes (COCO dataset indices for animals)
-  # 14: bird, 15: cat, 16: dog, 17: horse, 18: sheep, 19: cow
-  # 20: elephant, 21: bear, 22: zebra, 23: giraffe
-  target_classes: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+  # Target classes (Wild cats / Big cats only)
+  # 15: tiger, 16: leopard, 17: jaguar, 18: lion, 19: cheetah
+  # 20: snow leopard, 21: clouded leopard, 22: puma, 23: lynx
+  target_classes: [15, 16, 17, 18, 19, 20, 21, 22, 23]
   
   # Processing settings
   input_size: 640

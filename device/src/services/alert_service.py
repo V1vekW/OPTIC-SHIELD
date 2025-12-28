@@ -38,7 +38,7 @@ class AlertService:
     - Event logging for audit trail
     """
     
-    HIGH_PRIORITY_CLASSES = ["bear", "elephant", "wolf", "tiger", "lion", "leopard"]
+    HIGH_PRIORITY_CLASSES = ["tiger", "lion", "leopard", "jaguar", "cheetah", "snow leopard", "clouded leopard", "puma", "lynx"]
     
     def __init__(
         self,

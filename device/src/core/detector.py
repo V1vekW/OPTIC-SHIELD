@@ -40,17 +40,16 @@ class WildlifeDetector:
     Optimized for Raspberry Pi 5 with NCNN backend.
     """
     
-    COCO_ANIMAL_CLASSES = {
-        14: "bird",
-        15: "cat", 
-        16: "dog",
-        17: "horse",
-        18: "sheep",
-        19: "cow",
-        20: "elephant",
-        21: "bear",
-        22: "zebra",
-        23: "giraffe"
+    WILD_CAT_CLASSES = {
+        15: "tiger",
+        16: "leopard",
+        17: "jaguar",
+        18: "lion",
+        19: "cheetah",
+        20: "snow leopard",
+        21: "clouded leopard",
+        22: "puma",
+        23: "lynx"
     }
     
     def __init__(
@@ -67,7 +66,7 @@ class WildlifeDetector:
         self.fallback_path = Path(fallback_path) if fallback_path else None
         self.confidence_threshold = confidence_threshold
         self.iou_threshold = iou_threshold
-        self.target_classes = target_classes or list(self.COCO_ANIMAL_CLASSES.keys())
+        self.target_classes = target_classes or list(self.WILD_CAT_CLASSES.keys())
         self.use_ncnn = use_ncnn
         self.num_threads = num_threads
         
@@ -163,7 +162,7 @@ class WildlifeDetector:
                         confidence = float(box.conf[0])
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                         
-                        class_name = self.COCO_ANIMAL_CLASSES.get(
+                        class_name = self.WILD_CAT_CLASSES.get(
                             class_id, 
                             self.model.names.get(class_id, f"class_{class_id}")
                         )
@@ -177,7 +176,7 @@ class WildlifeDetector:
                         )
                         detections.append(detection)
             
-            logger.debug(f"Detection completed in {inference_time:.1f}ms, found {len(detections)} animals")
+            logger.debug(f"Detection completed in {inference_time:.1f}ms, found {len(detections)} wild cats")
             
         except Exception as e:
             logger.error(f"Detection error: {e}")

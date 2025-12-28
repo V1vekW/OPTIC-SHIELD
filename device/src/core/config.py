@@ -53,7 +53,7 @@ class ModelConfig:
 class DetectionConfig:
     model: ModelConfig = field(default_factory=ModelConfig)
     target_classes: list = field(
-        default_factory=lambda: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        default_factory=lambda: [15, 16, 17, 18, 19, 20, 21, 22, 23]
     )
     input_size: int = 640
     batch_size: int = 1

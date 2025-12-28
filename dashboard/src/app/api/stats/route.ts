@@ -5,10 +5,30 @@ import { DashboardStats, Detection, Device } from '@/types'
 const deviceStore = getDeviceStore()
 const detectionStore = getDetectionStore()
 
+// Wild cat species filter - ONLY these species are allowed
+const WILD_CAT_SPECIES = [
+  'tiger',
+  'leopard',
+  'jaguar',
+  'lion',
+  'cheetah',
+  'snow leopard',
+  'clouded leopard',
+  'puma',
+  'lynx'
+]
+
+function isWildCat(className: string): boolean {
+  return WILD_CAT_SPECIES.includes(className.toLowerCase())
+}
+
 export async function GET() {
   try {
     const devices = Array.from(deviceStore.values()) as Device[]
-    const detections: Detection[] = detectionStore.get('all') || []
+    let detections: Detection[] = detectionStore.get('all') || []
+    
+    // Filter to only include wild cat detections
+    detections = detections.filter(d => isWildCat(d.className))
 
     const now = Date.now()
     const oneDayAgo = now - 24 * 60 * 60 * 1000

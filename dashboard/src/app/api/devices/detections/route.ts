@@ -5,6 +5,23 @@ import { Detection, DetectionPayload } from '@/types'
 const deviceStore = getDeviceStore()
 const detectionStore = getDetectionStore()
 
+// Wild cat species filter - ONLY these species are allowed
+const WILD_CAT_SPECIES = [
+  'tiger',
+  'leopard',
+  'jaguar',
+  'lion',
+  'cheetah',
+  'snow leopard',
+  'clouded leopard',
+  'puma',
+  'lynx'
+]
+
+function isWildCat(className: string): boolean {
+  return WILD_CAT_SPECIES.includes(className.toLowerCase())
+}
+
 // Detection event log for auditing
 const detectionEventLog: Array<{
   eventId: string
@@ -57,6 +74,15 @@ export async function POST(request: NextRequest) {
     if (!device_id || !class_name) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Validate that detection is a wild cat species only
+    if (!isWildCat(class_name)) {
+      console.log(`Rejected non-wild-cat detection: ${class_name} from ${device_id}`)
+      return NextResponse.json(
+        { success: false, error: 'Only wild cat species are allowed' },
         { status: 400 }
       )
     }

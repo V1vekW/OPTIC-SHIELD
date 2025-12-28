@@ -12,23 +12,17 @@ interface EnhancedDetectionListProps {
   detections: Detection[]
 }
 
-const animalEmojis: Record<string, string> = {
-  bird: '🐦',
-  cat: '🐱',
-  dog: '🐕',
-  horse: '🐴',
-  sheep: '🐑',
-  cow: '🐄',
-  elephant: '🐘',
-  bear: '🐻',
-  zebra: '🦓',
-  giraffe: '🦒',
-  tiger: '🐅',
+const wildCatEmojis: Record<string, string> = {
+  tiger: '🐯',
   lion: '🦁',
   leopard: '🐆',
-  wolf: '🐺',
-  deer: '🦌',
-  default: '🦁'
+  jaguar: '🐆',
+  cheetah: '🐆',
+  'snow leopard': '🐆',
+  'clouded leopard': '🐆',
+  puma: '🐆',
+  lynx: '🐈',
+  default: '🐯'
 }
 
 export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps) {
@@ -130,7 +124,7 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
             ) : (
               <div className="relative flex-shrink-0 w-14 h-14 flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700/50 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-colors">
                 <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">
-                  {animalEmojis[detection.className.toLowerCase()] || animalEmojis.default}
+                  {wildCatEmojis[detection.className.toLowerCase()] || wildCatEmojis.default}
                 </span>
               </div>
             )}
@@ -215,7 +209,7 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
             <div className="flex items-center justify-between p-4 border-b border-border dark:border-slate-700/50">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">
-                  {animalEmojis[selectedDetection.className.toLowerCase()] || animalEmojis.default}
+                  {wildCatEmojis[selectedDetection.className.toLowerCase()] || wildCatEmojis.default}
                 </span>
                 <div>
                   <h3 className="text-xl font-bold text-foreground capitalize">{selectedDetection.className}</h3>

@@ -5,6 +5,23 @@ import { Detection } from '@/types'
 const deviceStore = getDeviceStore()
 const detectionStore = getDetectionStore()
 
+// Wild cat species filter - ONLY these species are allowed
+const WILD_CAT_SPECIES = [
+  'tiger',
+  'leopard',
+  'jaguar',
+  'lion',
+  'cheetah',
+  'snow leopard',
+  'clouded leopard',
+  'puma',
+  'lynx'
+]
+
+function isWildCat(className: string): boolean {
+  return WILD_CAT_SPECIES.includes(className.toLowerCase())
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authResult = verifyRequest(request)
@@ -30,8 +47,15 @@ export async function POST(request: NextRequest) {
 
     const storedDetections = detectionStore.get('all') || []
     let addedCount = 0
+    let rejectedCount = 0
 
     for (const det of incomingDetections) {
+      // Filter out non-wild-cat species
+      if (!isWildCat(det.class_name)) {
+        rejectedCount++
+        continue
+      }
+
       const detection: Detection = {
         id: det.detection_id || Date.now() + addedCount,
         deviceId: device_id,
@@ -58,7 +82,7 @@ export async function POST(request: NextRequest) {
       deviceStore.set(device_id, device)
     }
 
-    console.log(`Batch: ${addedCount} detections received from ${deviceName}`)
+    console.log(`Batch: ${addedCount} wild cat detections received from ${deviceName}${rejectedCount > 0 ? ` (${rejectedCount} non-wild-cat detections rejected)` : ''}`)
 
     return NextResponse.json({ 
       success: true, 
