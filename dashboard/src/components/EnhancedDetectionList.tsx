@@ -111,7 +111,7 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
           <div
             key={`${detection.deviceId}-${detection.id}`}
             onClick={() => setSelectedDetection(detection)}
-            className="group relative flex items-center gap-5 p-4 bg-gradient-to-r from-slate-900/60 to-slate-900/40 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/5 overflow-hidden cursor-pointer"
+            className="group relative flex items-center gap-5 p-4 spotlight-card glass-panel rounded-xl cursor-pointer transition-all duration-300 hover:border-nexus-accent/30"
           >
             {/* Hover Glint */}
             <div className="absolute top-0 left-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
@@ -119,8 +119,8 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
             {/* Image Thumbnail */}
             {detection.imageUrl ? (
               <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-slate-700/50 group-hover:border-emerald-500/30 transition-colors">
-                <img 
-                  src={detection.imageUrl} 
+                <img
+                  src={detection.imageUrl}
                   alt={detection.className}
                   className="w-full h-full object-cover"
                 />
@@ -202,11 +202,15 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
 
       {/* Detection Detail Modal */}
       {selectedDetection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedDetection(null)}>
-          <div 
-            className="relative w-full max-w-2xl bg-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onClick={() => setSelectedDetection(null)}>
+          <div
+            className="relative w-full max-w-2xl glass-panel spotlight-card rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Local Noise Texture */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+            }} />
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
               <div className="flex items-center gap-3">
@@ -218,7 +222,7 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
                   <p className="text-sm text-slate-400">{selectedDetection.deviceName}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedDetection(null)}
                 className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
@@ -229,8 +233,8 @@ export function EnhancedDetectionList({ detections }: EnhancedDetectionListProps
             {/* Image */}
             {selectedDetection.imageUrl ? (
               <div className="relative aspect-video bg-slate-950">
-                <img 
-                  src={selectedDetection.imageUrl} 
+                <img
+                  src={selectedDetection.imageUrl}
                   alt={`${selectedDetection.className} detection`}
                   className="w-full h-full object-contain"
                 />

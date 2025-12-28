@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Shield, Camera, Activity, BarChart3, Settings, RefreshCw, Zap, Wifi, WifiOff } from 'lucide-react'
+import { Shield, Camera, Activity, BarChart3, Settings, RefreshCw, Zap, Wifi, WifiOff, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import { Device, Detection, DashboardStats } from '@/types'
 import { apiClient } from '@/lib/api-client'
 import { useDeviceStream } from '@/lib/useDeviceStream'
@@ -13,7 +14,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Alert } from '@/components/ui/Alert'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { SystemHealth } from '@/components/dashboard/SystemHealth'
+import { RecentActivitySummary } from '@/components/dashboard/RecentActivitySummary'
 
 export default function Dashboard() {
   const [detections, setDetections] = useState<Detection[]>([])
@@ -23,10 +27,10 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  const { 
-    devices: streamDevices, 
+  const {
+    devices: streamDevices,
     isConnected: isStreamConnected,
-    lastUpdate: streamLastUpdate 
+    lastUpdate: streamLastUpdate
   } = useDeviceStream({
     onDeviceUpdate: useCallback((device: Device) => {
       setLastUpdate(new Date())
@@ -108,145 +112,62 @@ export default function Dashboard() {
       <Sidebar onRefresh={handleRefresh} isRefreshing={refreshing} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto relative">
-        {/* Background Ambient Glow */}
-        <div className="fixed top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary-900/10 via-slate-900/5 to-transparent pointer-events-none" />
+      <main className="flex-1 overflow-auto relative p-4 md:p-6 space-y-6">
 
-        <div className="max-w-[1600px] mx-auto px-6 py-10 space-y-10 relative z-10">
-
-          {/* Header Area */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-up">
+        {/* Row 1: System Health & Welcome */}
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight mb-1">Mission Control</h1>
-              <p className="text-slate-400 flex items-center gap-2">
-                System Status: 
-                {isStreamConnected ? (
-                  <span className="text-emerald-400 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 
-                    Live
-                  </span>
-                ) : (
-                  <span className="text-amber-400 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-400"></span> 
-                    Connecting...
-                  </span>
-                )}
+              <h1 className="text-2xl font-bold text-white tracking-tight mb-1">
+                System Overview
+              </h1>
+              <p className="text-sm text-slate-400">
+                Operational Metrics & Threat Monitoring
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Real-time connection indicator */}
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                isStreamConnected 
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-              }`}>
-                {isStreamConnected ? (
-                  <>
-                    <Wifi className="w-3 h-3" />
-                    <span>Real-time</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="w-3 h-3" />
-                    <span>Reconnecting</span>
-                  </>
-                )}
-              </div>
-              
-              {lastUpdate && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-slate-800 backdrop-blur-sm text-xs text-slate-400">
-                  <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
-                  Last updated: {lastUpdate.toLocaleTimeString()}
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              <Link href="/live-feed">
+                <Button variant="outline" size="sm" className="hidden md:flex border-slate-700/50 bg-slate-900/50 text-slate-300">
+                  Open Console
+                </Button>
+              </Link>
             </div>
           </div>
 
           {error && (
-            <Alert variant="error" title="Connection Error" onClose={() => setError(null)} className="animate-fade-in">
+            <Alert variant="error" title="System Error" onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
 
-          <section className="animate-fade-in-up animation-delay-200">
-            <EnhancedStatsOverview stats={stats} />
-          </section>
+          <SystemHealth devices={devices} onRefresh={handleRefresh} isRefreshing={refreshing} />
+        </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in-up animation-delay-400">
+        {/* Row 2: Key Stats */}
+        <EnhancedStatsOverview stats={stats} />
 
-            {/* Devices Column */}
-            <div className="xl:col-span-1 space-y-8">
-              <Card variant="glass" className="h-full border-white/5 shadow-xl shadow-black/20">
-                <CardHeader className="border-b border-slate-800/50 pb-4">
-                  <CardTitle
-                    icon={<Camera className="w-5 h-5 text-accent-400" />}
-                    badge={
-                      <Badge variant="info" size="sm" className="bg-accent-500/10 text-accent-400 border-accent-500/20">
-                        {devices.length} Active
-                      </Badge>
-                    }
-                  >
-                    Connected Devices
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 max-h-[800px] overflow-y-auto custom-scrollbar p-0 mt-4">
-                  {devices.length === 0 ? (
-                    <div className="text-center py-16 text-slate-500 border border-dashed border-slate-800 rounded-xl mx-4">
-                      <Camera className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                      <p className="font-medium mb-1 text-slate-400">No devices online</p>
-                      <p className="text-sm">Connect a device to start monitoring</p>
-                    </div>
-                  ) : (
-                    <div className="px-4 pb-4 space-y-3">
-                      {devices.map(device => (
-                        <EnhancedDeviceCard key={device.id} device={device} />
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+        {/* Row 3: Activity & Monitoring */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+          {/* Left: Activity Chart (2/3 width) */}
+          <div className="lg:col-span-2 h-full">
+            <Card variant="glass" className="h-full border-white/5 shadow-xl shadow-black/20 overflow-hidden">
+              <CardHeader className="border-b border-slate-800/50 py-3 min-h-[60px]">
+                <CardTitle icon={<BarChart3 className="w-4 h-4 text-primary-400" />}>
+                  Detection Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 h-[calc(100%-60px)]">
+                <ActivityChart stats={stats} />
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Main Data Column */}
-            <div className="xl:col-span-2 space-y-8">
-
-              {/* Activity Chart */}
-              <Card variant="glass" className="border-white/5 shadow-xl shadow-black/20 overflow-hidden">
-                <CardHeader className="border-b border-slate-800/50">
-                  <CardTitle
-                    icon={<BarChart3 className="w-5 h-5 text-primary-400" />}
-                  >
-                    Detection Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ActivityChart stats={stats} />
-                </CardContent>
-              </Card>
-
-              {/* Recent Detections */}
-              <Card variant="glass" className="border-white/5 shadow-xl shadow-black/20">
-                <CardHeader className="border-b border-slate-800/50">
-                  <CardTitle
-                    icon={<Zap className="w-5 h-5 text-warning-400" />}
-                    badge={
-                      <Badge variant="success" size="sm" className="bg-warning-500/10 text-warning-400 border-warning-500/20">
-                        {detections.length} Recent
-                      </Badge>
-                    }
-                  >
-                    Live Detection Feed
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="max-h-[500px] overflow-y-auto custom-scrollbar p-2">
-                    <EnhancedDetectionList detections={detections} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          {/* Right: Recent Activity Feed (1/3 width) */}
+          <div className="lg:col-span-1 h-full">
+            <RecentActivitySummary detections={detections} />
           </div>
         </div>
+
       </main>
     </div>
   )

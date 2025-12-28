@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import './globals.css'
+import { SpotlightEffect } from '@/components/SpotlightEffect'
+import { UnicornBackground } from '@/components/UnicornBackground'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -20,7 +23,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased text-white selection:bg-nexus-accent selection:text-white`}>
+        {/* GLOBAL BACKDROP */}
+        <div className="fixed inset-0 bg-[#050505] -z-50"></div>
+
+        {/* 3D BACKGROUND (Unicorn Studio) */}
+        {/* 3D BACKGROUND (Unicorn Studio) */}
+        <UnicornBackground />
+
+        {/* NOISE LAYER */}
+        <div className="noise-overlay"></div>
+
+        <SpotlightEffect />
+
         {children}
       </body>
     </html>

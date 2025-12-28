@@ -19,15 +19,15 @@ export function Card({
 }: CardProps) {
 
   const variants = {
-    default: 'bg-slate-900/40 border-white/5 backdrop-blur-md',
-    glass: 'bg-slate-950/10 border-white/10 backdrop-blur-3xl shadow-2xl hover:bg-slate-950/20 transition-colors',
-    neon: 'bg-slate-900/80 border-primary-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+    default: 'bg-slate-900/30 border border-white/5 backdrop-blur-xl',
+    glass: 'glass-panel spotlight-card',
+    neon: 'bg-slate-900/60 border border-primary-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] backdrop-blur-xl'
   }
 
   return (
     <div
       className={`
-        relative rounded-xl border backdrop-blur-xl overflow-hidden
+        relative rounded-xl overflow-hidden
         ${variants[variant]}
         ${gradient ? 'bg-gradient-to-br from-white/10 to-transparent before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/5 before:to-transparent before:pointer-events-none' : ''}
         ${hover ? 'transition-all duration-300 hover:border-slate-600/60 hover:shadow-lg hover:shadow-primary-900/10 hover:-translate-y-1' : ''}

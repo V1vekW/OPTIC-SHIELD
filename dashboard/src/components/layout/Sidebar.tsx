@@ -1,6 +1,7 @@
 import { Shield, BarChart3, Camera, Activity, Settings, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { ConnectionStatus } from '@/components/ConnectionStatus'
+import Link from 'next/link'
 
 interface SidebarProps {
     onRefresh: () => void
@@ -30,30 +31,36 @@ export function Sidebar({ onRefresh, isRefreshing }: SidebarProps) {
             {/* Navigation */}
             <nav className="flex-1 p-6 space-y-2">
                 <div className="mb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu</div>
-                <Button
-                    variant="ghost"
-                    size="md"
-                    className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
-                    icon={<BarChart3 className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
-                >
-                    Dashboard
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="md"
-                    className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
-                    icon={<Camera className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
-                >
-                    Devices
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="md"
-                    className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
-                    icon={<Activity className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
-                >
-                    Detections
-                </Button>
+                <Link href="/" className="block w-full">
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
+                        icon={<BarChart3 className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
+                    >
+                        Dashboard
+                    </Button>
+                </Link>
+                <Link href="/devices" className="block w-full">
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
+                        icon={<Camera className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
+                    >
+                        Devices
+                    </Button>
+                </Link>
+                <Link href="/live-feed" className="block w-full">
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 group"
+                        icon={<Activity className="w-5 h-5 text-slate-400 group-hover:text-primary-400 transition-colors" />}
+                    >
+                        Detections
+                    </Button>
+                </Link>
                 <Button
                     variant="ghost"
                     size="md"

@@ -14,20 +14,31 @@ import argparse
 import threading
 import urllib.request
 import urllib.error
+import base64
+import hashlib
+import hmac
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
-# Wildlife locations for simulation
+# Wildlife locations for simulation - Maharashtra Pune villages
 WILDLIFE_LOCATIONS = [
-    {"name": "Serengeti National Park", "latitude": -2.3333, "longitude": 34.8333, "timezone": "Africa/Dar_es_Salaam"},
-    {"name": "Yellowstone National Park", "latitude": 44.4280, "longitude": -110.5885, "timezone": "America/Denver"},
-    {"name": "Kruger National Park", "latitude": -23.9884, "longitude": 31.5547, "timezone": "Africa/Johannesburg"},
-    {"name": "Amazon Rainforest Station", "latitude": -3.4653, "longitude": -62.2159, "timezone": "America/Manaus"},
-    {"name": "Great Barrier Reef Station", "latitude": -18.2871, "longitude": 147.6992, "timezone": "Australia/Brisbane"},
-    {"name": "Galápagos Islands", "latitude": -0.9538, "longitude": -90.9656, "timezone": "Pacific/Galapagos"},
-    {"name": "Borneo Rainforest", "latitude": 1.5533, "longitude": 110.3592, "timezone": "Asia/Kuching"},
-    {"name": "Arctic Wildlife Station", "latitude": 71.2906, "longitude": -156.7886, "timezone": "America/Anchorage"},
+    {"name": "Lonavala Forest Reserve", "latitude": 18.7540, "longitude": 73.4057, "timezone": "Asia/Kolkata"},
+    {"name": "Khandala Wildlife Zone", "latitude": 18.7512, "longitude": 73.3765, "timezone": "Asia/Kolkata"},
+    {"name": "Mulshi Lake Area", "latitude": 18.6417, "longitude": 73.5178, "timezone": "Asia/Kolkata"},
+    {"name": "Pawna Dam Region", "latitude": 18.6989, "longitude": 73.5113, "timezone": "Asia/Kolkata"},
+    {"name": "Tikona Fort Forest", "latitude": 18.6320, "longitude": 73.5340, "timezone": "Asia/Kolkata"},
+    {"name": "Lavasa Hills", "latitude": 18.4135, "longitude": 73.5174, "timezone": "Asia/Kolkata"},
+    {"name": "Rajgad Fort Area", "latitude": 18.2475, "longitude": 73.6525, "timezone": "Asia/Kolkata"},
+    {"name": "Torna Fort Region", "latitude": 18.2806, "longitude": 73.7197, "timezone": "Asia/Kolkata"},
+    {"name": "Sinhagad Wildlife", "latitude": 18.3589, "longitude": 73.7547, "timezone": "Asia/Kolkata"},
+    {"name": "Panshet Dam Forest", "latitude": 18.4167, "longitude": 73.4167, "timezone": "Asia/Kolkata"},
+    {"name": "Varasgaon Wildlife", "latitude": 18.4333, "longitude": 73.7333, "timezone": "Asia/Kolkata"},
+    {"name": "Bhimashankar Reserve", "latitude": 19.0778, "longitude": 73.5325, "timezone": "Asia/Kolkata"},
+    {"name": "Matheran Eco Zone", "latitude": 18.9833, "longitude": 73.2667, "timezone": "Asia/Kolkata"},
+    {"name": "Karnala Bird Sanctuary", "latitude": 18.8750, "longitude": 73.1167, "timezone": "Asia/Kolkata"},
+    {"name": "Sanjay Gandhi National Park", "latitude": 19.2147, "longitude": 72.9315, "timezone": "Asia/Kolkata"},
 ]
 
 CAMERA_MODELS = [
@@ -45,6 +56,23 @@ HARDWARE_MODELS = [
     "Raspberry Pi 4 Model B",
     "Jetson Nano",
 ]
+
+# Wildlife classes for simulation
+WILDLIFE_CLASSES = [
+    {"name": "leopard", "high_priority": True, "confidence_range": (0.7, 0.95)},
+    {"name": "tiger", "high_priority": True, "confidence_range": (0.75, 0.98)},
+    {"name": "bear", "high_priority": True, "confidence_range": (0.6, 0.9)},
+    {"name": "wolf", "high_priority": True, "confidence_range": (0.65, 0.92)},
+    {"name": "deer", "high_priority": False, "confidence_range": (0.8, 0.98)},
+    {"name": "monkey", "high_priority": False, "confidence_range": (0.7, 0.95)},
+    {"name": "peacock", "high_priority": False, "confidence_range": (0.75, 0.97)},
+    {"name": "wild_boar", "high_priority": False, "confidence_range": (0.6, 0.88)},
+    {"name": "fox", "high_priority": False, "confidence_range": (0.65, 0.9)},
+    {"name": "rabbit", "high_priority": False, "confidence_range": (0.8, 0.96)},
+]
+
+# Demo images for simulation
+DEMO_IMAGES = ["jaguar.jpg", "lion.png"]
 
 
 @dataclass
@@ -74,19 +102,24 @@ class DeviceSimulator:
         self,
         api_url: str,
         api_key: str,
+        device_secret: str = "",
         num_devices: int = 3,
         heartbeat_interval: int = 10,
-        detection_probability: float = 0.1
+        detection_probability: float = 0.1,
+        send_images: bool = True
     ):
         self.api_url = api_url.rstrip('/')
         self.api_key = api_key
+        self.device_secret = device_secret
         self.num_devices = num_devices
         self.heartbeat_interval = heartbeat_interval
         self.detection_probability = detection_probability
+        self.send_images = send_images
         
         self.devices: List[SimulatedDevice] = []
         self._stop_event = threading.Event()
         self._threads: List[threading.Thread] = []
+        self._demo_images: Dict[str, str] = {}
     
     def _generate_device_id(self) -> str:
         """Generate a unique device ID."""
@@ -126,6 +159,38 @@ class DeviceSimulator:
             power_source=random.choice(["ac", "solar", "battery"]),
         )
     
+    def _load_demo_images(self):
+        """Load demo images for detection simulation."""
+        demo_dir = Path(__file__).parent.parent.parent / "demo-img"
+        
+        for image_name in DEMO_IMAGES:
+            image_path = demo_dir / image_name
+            if image_path.exists():
+                try:
+                    with open(image_path, "rb") as f:
+                        image_data = f.read()
+                        # Compress image if needed (simple resize simulation)
+                        if len(image_data) > 500 * 1024:  # If > 500KB
+                            # For simulation, we'll just note it would be compressed
+                            pass
+                        self._demo_images[image_name] = base64.b64encode(image_data).decode()
+                        print(f"Loaded demo image: {image_name} ({len(image_data)} bytes)")
+                except Exception as e:
+                    print(f"Failed to load {image_name}: {e}")
+    
+    def _generate_signature(self, payload: str, timestamp: int, device_id: str) -> str:
+        """Generate HMAC signature for secure requests."""
+        if not self.device_secret:
+            return ""
+        
+        message = f"{device_id}:{timestamp}:{payload}"
+        signature = hmac.new(
+            self.device_secret.encode(),
+            message.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        return signature
+    
     def _make_request(
         self,
         endpoint: str,
@@ -145,6 +210,11 @@ class DeviceSimulator:
             "X-Device-ID": device_id,
             "X-Timestamp": str(timestamp),
         }
+        
+        # Add signature if device secret is provided
+        signature = self._generate_signature(payload, timestamp, device_id)
+        if signature:
+            headers["X-Signature"] = signature
         
         try:
             req = urllib.request.Request(
@@ -243,6 +313,62 @@ class DeviceSimulator:
             return True
         return False
     
+    def _send_detection(self, device: SimulatedDevice) -> bool:
+        """Send a simulated wildlife detection with image."""
+        wildlife = random.choice(WILDLIFE_CLASSES)
+        camera = random.choice(device.cameras)
+        
+        detection_id = int(time.time() * 1000)
+        event_id = f"evt-{detection_id}"
+        
+        confidence = random.uniform(*wildlife["confidence_range"])
+        bbox = [
+            random.randint(50, 200),
+            random.randint(50, 200),
+            random.randint(300, 600),
+            random.randint(300, 600)
+        ]
+        
+        data = {
+            "event_id": event_id,
+            "detection_id": detection_id,
+            "device_id": device.device_id,
+            "camera_id": camera["id"],
+            "timestamp": time.time(),
+            "class_name": wildlife["name"],
+            "confidence": round(confidence, 3),
+            "bbox": bbox,
+            "location": {
+                "latitude": device.location["latitude"],
+                "longitude": device.location["longitude"],
+                "name": device.location["name"]
+            },
+            "metadata": {
+                "priority": "high" if wildlife["high_priority"] else "normal",
+                "processing_time_ms": random.randint(100, 500),
+                "model_version": "yolov8n",
+                "camera_name": camera["name"]
+            }
+        }
+        
+        if self.send_images and self._demo_images:
+            image_name = random.choice(list(self._demo_images.keys()))
+            data["image_base64"] = self._demo_images[image_name]
+        
+        response = self._make_request(
+            "/api/devices/detections",
+            data=data,
+            device_id=device.device_id
+        )
+        
+        if response and response.get("success"):
+            device.detection_count += 1
+            priority = "HIGH" if wildlife["high_priority"] else "NORM"
+            img_status = "with image" if "image_base64" in data else "no image"
+            print(f"[{device.device_id}] Detection: {wildlife['name']} ({confidence:.2f}) [{priority}] {img_status}")
+            return True
+        return False
+    
     def _send_heartbeat(self, device: SimulatedDevice) -> bool:
         """Send a heartbeat for a device."""
         stats = self._simulate_metrics(device)
@@ -285,20 +411,31 @@ class DeviceSimulator:
                 print(f"[{device.device_id}] Registration failed, exiting")
                 return
         
-        # Send heartbeats
+        # Send heartbeats and detections
         while not self._stop_event.is_set():
             self._send_heartbeat(device)
+            
+            # Randomly trigger detection
+            if random.random() < self.detection_probability:
+                self._send_detection(device)
+            
             self._stop_event.wait(self.heartbeat_interval)
     
     def start(self):
         """Start the device simulator."""
-        print(f"\n{'='*60}")
+        print("\n" + "="*60)
         print("OPTIC-SHIELD Device Simulator")
-        print(f"{'='*60}")
+        print("="*60)
         print(f"API URL: {self.api_url}")
         print(f"Devices: {self.num_devices}")
         print(f"Heartbeat Interval: {self.heartbeat_interval}s")
-        print(f"{'='*60}\n")
+        print(f"Detection Probability: {self.detection_probability}")
+        print(f"Send Images: {self.send_images}")
+        print("="*60 + "\n")
+        
+        # Load demo images
+        if self.send_images:
+            self._load_demo_images()
         
         # Create devices
         for i in range(self.num_devices):
